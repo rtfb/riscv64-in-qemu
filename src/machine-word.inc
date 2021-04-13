@@ -8,10 +8,14 @@
 .ifdef XLEN
 .equ REGBITS,   XLEN
 .equ REGBYTES,  XLEN/8
+.equ LOG2_SIZEOF_PTR, 2
+.equ SIZEOF_PTR, (1 << LOG2_SIZEOF_PTR)
 .else
 .equ XLEN,      64
 .equ REGBITS,   64
 .equ REGBYTES,  8
+.equ LOG2_SIZEOF_PTR, 3
+.equ SIZEOF_PTR, (1 << LOG2_SIZEOF_PTR)
 .endif
 .if XLEN == 32
     .set RISCV32, 1

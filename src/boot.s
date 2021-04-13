@@ -220,15 +220,6 @@ exception_vector:                       # 3.1.20 Machine Cause Register (mcause)
         j exception                     # 16: reserved
 exception_vector_end:
 
-syscall_vector:                         # for fun let's pretend syscall table is kinda like 32bit Linux on x86,
-                                        # /usr/include/asm/unistd_32.h: __NR_restart_syscall 0, __NR_exit 1, _NR_fork 2, __NR_read 3, __NR_write 4
-        j syscall0
-        j syscall1
-        j syscall2
-        j syscall3
-        j syscall4
-syscall_vector_end:
-
 exception_dispatch:
         stackalloc_x 32                 # allocate enough space to potentially store _all_ registers
                                         # in case the following handlers would need to save clobbered state
@@ -245,11 +236,14 @@ exception_dispatch:
 
 syscall_dispatch:                       # a7 contains syscall index
         la      t0, syscall_vector
-        slli    t1, a7, 2
-        add     t0, t0, t1              # jump -> syscall_vector + (a7-1) * 4
-        la      t1, syscall_vector_end  # check out-of-bounds
-        bgeu    t0, t1, syscall_epilogue
-        jr      t0
+        li      t1, 5                   # TODO: 5 is the number of entries in syscall_vector. We need to find a way to
+                                        # unhardcode this number and derive it from the actual table
+        bgeu    a7, t1, syscall_epilogue
+        slli    t1, a7, LOG2_SIZEOF_PTR
+        add     t0, t0, t1              # read a pointer from syscall_vector + a7 * sizeof(ptr)
+        lx      t1, 0, (t0)             # dereference that pointer into a function address
+        jalr    t1                      # call a function at that address
+        j       syscall_epilogue
 
 exception_epilogue:
 .if HALT_ON_EXCEPTION == 1
@@ -333,16 +327,6 @@ interrupt_timer:
 k_interrupt_timer:
         call    kernel_timer_tick
         j       interrupt_epilogue
-
-syscall0:
-        jal     poweroff
-        j       syscall_epilogue
-syscall1:
-syscall2:
-syscall3:
-syscall4:
-        jal     prints
-        j       syscall_epilogue
 
 .globl kprints
 kprints:

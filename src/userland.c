@@ -1,6 +1,8 @@
 #include "sys.h"
 #include "userland.h"
 
+#define PRINT_FREQ (10*1000*1000)
+
 uint64_t get_clock_cycles();
 int m_read_hart_id();
 
@@ -42,7 +44,7 @@ int _userland u_main() {
     int flipper = 0;
     while (1) {
         counter++;
-        if (counter % 10000000 == 0) {
+        if (counter % PRINT_FREQ == 0) {
             flipper++;
             if ((flipper & 1) == 0) {
                 sys_puts("-");
@@ -94,7 +96,7 @@ int _userland u_main2() {
     int flipper = 0;
     while (1) {
         counter++;
-        if (counter % 10000000 == 0) {
+        if (counter % PRINT_FREQ == 0) {
             flipper++;
             if ((flipper & 1) == 0) {
                 sys_puts(".");
